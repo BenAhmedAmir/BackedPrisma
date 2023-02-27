@@ -9,7 +9,7 @@ describe('POST /users - create user', function () {
     afterAll(async () => {
         await server.stop()
     })
-    let userId;
+    let userId: number;
     test('create user', async () => {
         const response = await server.inject({
             method: 'POST',
@@ -45,4 +45,61 @@ describe('POST /users - create user', function () {
              expect(response.statusCode).toEqual(400)
            
        })
+    test('get user returns 404 for non existant user', async () => {
+        const response = await server.inject({
+            method: 'GET',
+            url: '/users/9999',
+        })
+
+        expect(response.statusCode).toEqual(404)
+    })
+    test('get user returns user', async () => {
+        const response = await server.inject({
+            method: 'GET',
+            url: `/users/${userId}`,
+        })
+        expect(response.statusCode).toEqual(200)
+        const user = JSON.parse(response.payload)
+
+        expect(user.id).toBe(userId)
+    })
+    test('update user fails with invalid userId parameter', async () => {
+        const response = await server.inject({
+            method: 'PUT',
+            url: `/users/aa22`,
+        })
+        expect(response.statusCode).toEqual(400)
+    })
+    test('update user', async () => {
+        const updatedFirstName = 'AmirBEN'
+        const updatedLastName = 'AmirUPDATED'
+
+        const response = await server.inject({
+            method: 'PUT',
+            url: `/users/${userId}`,
+            payload: {
+                firstName: updatedFirstName,
+                lastName: updatedLastName,
+            },
+        })
+        expect(response.statusCode).toEqual(200)
+        const user = JSON.parse(response.payload)
+        expect(user.firstName).toEqual(updatedFirstName)
+        expect(user.lastName).toEqual(updatedLastName)
+    })
+
+    test('delete user fails with invalid userId parameter', async () => {
+        const response = await server.inject({
+            method: 'DELETE',
+            url: `/users/aa22`,
+        })
+        expect(response.statusCode).toEqual(400)
+    })
+    test('delete user', async () => {
+        const response = await server.inject({
+            method: 'DELETE',
+            url: `/users/${userId}`,
+        })
+        expect(response.statusCode).toEqual(204)
+    })
 });
